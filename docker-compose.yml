@@ -1,0 +1,48 @@
+# Use root/example as user/password credentials
+version: '3.1'
+
+services:
+  app:
+    build: .
+    container_name: app
+    networks:
+      - my-network
+    volumes:
+      - ./:/app
+    ports:
+      - 3000:3000
+    depends_on:
+      - db
+  
+  db:
+    image: mysql
+    container_name: db
+    # NOTE: use of "mysql_native_password" is not recommended: https://dev.mysql.com/doc/refman/8.0/en/upgrading-from-previous-series.html#upgrade-caching-sha2-password
+    # (this is just an example, not intended to be a production configuration)
+    command: --innodb-use-native-aio=0
+    volumes:
+      - ./database:/docker-entrypoint-initdb.d
+
+    restart: always
+    ports:
+      - 3306:3306
+    networks:
+      - my-network
+    environment:
+      - MYSQL_DATABASE=customer
+      - MYSQL_ROOT_PASSWORD=example
+
+  adminer:
+    image: adminer
+    container_name: adminer
+    networks:
+      - my-network
+    restart: always
+    ports:
+      - 8080:8080
+volumes:
+  mysql_data:
+    external: true
+networks:
+  my-network:
+    driver: bridge
